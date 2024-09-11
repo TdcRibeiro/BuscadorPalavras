@@ -1,0 +1,3 @@
+C:/Users/thiag/CLionProjects/buscador_palavra/cmake-build-debug/CMakeFiles/buscador_palavra.dir
+C:/Users/thiag/CLionProjects/buscador_palavra/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/thiag/CLionProjects/buscador_palavra/cmake-build-debug/CMakeFiles/rebuild_cache.dir
