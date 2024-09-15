@@ -152,6 +152,11 @@ int main() {
         return 1;
     }
 
+    // Limitar o número de threads ao número de arquivos, se necessário
+    if (num_threads > file_count) {
+        num_threads = file_count;
+    }
+
     // Inicializa o mutex
     pthread_mutex_init(&mutex, NULL);
 
@@ -167,17 +172,28 @@ int main() {
     int files_per_thread = (file_count + num_threads - 1) / num_threads;
 
     // Cria as threads
-    pthread_t threads[num_threads];
-    for (int i = 0; i < num_threads; i++) {
-        char **file_subset = (char**)malloc((files_per_thread + 1) * sizeof(char*));
-        for (int j = 0; j < files_per_thread && *files != NULL; j++) {
-            file_subset[j] = *files;
-            files++;
-        }
-        file_subset[files_per_thread] = NULL;  // Finaliza o conjunto da thread
-        pthread_create(&threads[i], NULL, thread_function, (void*)file_subset);
-    }
+    int thread_count = (file_count < num_threads) ? file_count : num_threads;
+    pthread_t threads[thread_count];
 
+    int base_files_per_thread = file_count / thread_count;  // Divisão básica
+    int extra_files = file_count % thread_count;  // Arquivos extras para balancear
+
+    int current_file_index = 0;
+    for (int i = 0; i < thread_count; i++) {
+        int files_for_this_thread = base_files_per_thread +
+                                    (i < extra_files ? 1 : 0);  // Adiciona 1 arquivo extra para as primeiras threads
+
+        // Alocar o subconjunto de arquivos para a thread
+        char **file_subset = (char **) malloc((files_for_this_thread + 1) * sizeof(char *));
+        for (int j = 0; j < files_for_this_thread; j++) {
+            file_subset[j] = files[current_file_index];
+            current_file_index++;
+        }
+        file_subset[files_for_this_thread] = NULL;  // Finaliza o conjunto com NULL
+
+        // Cria a thread
+        pthread_create(&threads[i], NULL, thread_function, (void *) file_subset);
+    }
     // Aguarda todas as threads terminarem
     for (int i = 0; i < num_threads; i++) {
         pthread_join(threads[i], NULL);
